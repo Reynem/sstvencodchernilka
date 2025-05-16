@@ -1,12 +1,22 @@
 import os
+import sys
 import subprocess
+from datetime import datetime
 
 # Создание папок Encode, Decode, Encode_Result и Decode_Result
 os.makedirs('Encode', exist_ok=True)
 os.makedirs('Encode_Result', exist_ok=True)
 
-input_image = './Encode/input_image.png'
-output_audio = './Encode_Result/output.wav'
+# Ожидаем, когда пользователь введёт корректное название картинки
+while True:
+    input_image = './Encode/' + input("Введите название вашей картинки\n") + ".png"
+    if not os.path.exists(input_image):
+        print("Файл input_image.png не найден в папке Encode.")
+        continue
+    break
+
+# Теперь звук не будет перезаписываться каждый раз
+output_audio = f'./Encode_Result/{datetime.now().strftime('%Y%m%d_%H%M%S')}_output.wav'
 
 # Список кодеров и декодеров
 coders_decoders = [
@@ -95,8 +105,15 @@ while True:
         # Кодирование или декодирование
         if choice == "2":
             # Кодирование
-            command = ['python', '-m', 'pysstv', '--mode', mode, input_image, output_audio]
-            subprocess.run(command)
+            # Заменил 'python' на sys.executable, чтобы выбиралось виртуальное окружение
+            command = [sys.executable, '-m', 'pysstv', '--mode', mode, input_image, output_audio]
+            result = subprocess.run(command, capture_output=True, text=True)
+            if result.returncode != 0:
+                print("Произошла ошибка при кодировании:")
+                print(result.stderr)
+            else:
+                print("Успешно сохранено в", output_audio)
+
         break  # Выход из цикла, если выбор верный
     else:
         print("Неверный выбор. Попробуйте снова.")
